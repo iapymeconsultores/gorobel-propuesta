@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gorobel: propuesta de delegación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F2EE; --ink:#1C2530; --muted:#56606B; --line:#C9CDC5;
+  --red:#B92D37; --blue:#1F5CA8; --green:#2A7548; --hl:#E4E8DF; --card:#FAFBF8; --bluebg:#E6ECF5;
+  --r:8px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#1D2829; --ink:#EAEDE6; --muted:#A6B0A9; --line:#3B4848;
+    --red:#FF8B83; --blue:#8DB6FF; --green:#8FD1A5; --hl:#263334; --card:#223031; --bluebg:#22334A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1D2829; --ink:#EAEDE6; --muted:#A6B0A9; --line:#3B4848;
+  --red:#FF8B83; --blue:#8DB6FF; --green:#8FD1A5; --hl:#263334; --card:#223031; --bluebg:#22334A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px);scrollbar-color:var(--line) var(--paper);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-variation-settings:"wdth" 100;font-size:18px;line-height:1.55;font-variant-numeric:tabular-nums}
+::selection{background:var(--blue);color:var(--paper)}
+a{color:inherit;text-underline-offset:3px;text-decoration-thickness:1.5px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:4px}
+button{font:inherit;color:inherit}
+h1,h2,h3{font-variation-settings:"wdth" 66;font-weight:850;line-height:1.04;margin:0;text-wrap:balance}
+h1{font-size:clamp(38px,5.4vw,64px);max-width:22ch;letter-spacing:-.4px}
+h2{font-size:clamp(30px,4.2vw,46px);margin-bottom:12px}
+h3{font-size:22px;margin-bottom:6px}
+p{max-width:66ch;margin:0 0 12px}
+.intro{color:var(--muted);font-size:18px}
+.ic{display:inline-block;width:18px;height:18px;flex:none;vertical-align:-3px}
+
+/* nav */
+.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--paper);border-bottom:1px solid var(--line)}
+.toc ul{list-style:none;margin:0 auto;padding:0 22px;max-width:1060px;display:flex;gap:22px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.toc ul::-webkit-scrollbar{display:none}
+.toc a{display:block;padding:15px 0 13px;font-size:15px;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent}
+.toc a:hover{color:var(--ink)}
+.toc a[aria-current="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+
+main{max-width:1060px;margin:0 auto;padding:30px 22px 80px}
+section{padding-top:96px}
+.top{display:flex;justify-content:space-between;gap:12px;font-size:15px;color:var(--muted);margin-bottom:22px;flex-wrap:wrap}
+.top b{color:var(--ink)}
+.top{align-items:center}
+.top span{text-align:right}
+.logo{height:56px;width:auto;display:block}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo{filter:invert(1) hue-rotate(180deg)}}
+:root[data-theme="dark"] .logo{filter:invert(1) hue-rotate(180deg)}
+@media (max-width:520px){.top span{text-align:left}.logo{height:44px}}
+.lede{font-size:20px;color:var(--muted);max-width:56ch;margin-top:16px}
+
+/* hero board */
+.board{margin-top:24px;border:2px solid var(--ink);border-radius:var(--r);background:var(--card);padding:18px 18px 14px}
+.boardhead{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.switch{display:inline-flex;border:2px solid var(--ink);border-radius:999px;padding:3px;gap:3px}
+.switch button{white-space:nowrap;border:0;background:transparent;padding:9px 18px;border-radius:999px;cursor:pointer;font-weight:700;font-size:16px;transition:background-color .15s,transform .1s}
+.switch button:hover{background:var(--hl)}
+.switch button:active{transform:translateY(1px)}
+.switch button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.count{display:flex;align-items:baseline;gap:10px}
+.count .num{white-space:nowrap}
+.count .num{font-variation-settings:"wdth" 62;font-weight:900;font-size:40px;line-height:1}
+.count .txt{font-size:16px;color:var(--muted);max-width:30ch;line-height:1.3}
+#flow{display:block;width:100%;height:auto;margin-top:6px}
+#flow text{font-family:"Archivo",system-ui,sans-serif;fill:var(--ink)}
+.chip rect{fill:var(--card);stroke-width:2}
+.chip text{font-size:13.5px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{display:inline-block;width:26px;height:0;border-top:2.5px solid}
+
+/* diagnosis */
+.reads{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line);margin-top:22px}
+.read{padding:20px 22px 20px 0;border-bottom:1px solid var(--line)}
+.read:nth-child(odd){border-right:1px solid var(--line)}
+.read:nth-child(even){padding-left:22px}
+.read h3{font-size:20px}
+.read p{font-size:16.5px;margin:0;color:var(--muted)}
+.gaps{margin-top:36px}
+.gaps > h3{font-size:24px;margin-bottom:14px}
+.gaprow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.gap{background:var(--hl);border-radius:var(--r);padding:18px}
+.gap strong{display:block;font-size:18px;line-height:1.3}
+.gap .to{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:16px;color:var(--muted)}
+.gap .to a{color:var(--ink);font-weight:700}
+
+/* filter */
+.filter{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px}
+.col{border-top:6px solid var(--c);padding-top:12px}
+.col h3{color:var(--c);font-size:26px;margin-bottom:4px}
+.col .q{font-size:15px;color:var(--muted);margin-bottom:8px;min-height:44px}
+.col ul{list-style:none;margin:0;padding:0}
+.col li{padding:8px 0;border-bottom:1px solid var(--line);font-size:16px}
+.col li:last-child{border-bottom:0}
+
+/* roles table */
+.tablewrap{overflow-x:auto;margin-top:22px;position:relative}
+table{border-collapse:collapse;width:100%}
+.roles{min-width:720px}
+.roles th,.roles td{text-align:left;vertical-align:middle;padding:14px 14px 14px 0;border-bottom:1px solid var(--line);font-size:16px}
+.roles th{font-size:14.5px;color:var(--muted);font-weight:700;border-bottom:2px solid var(--ink);padding-top:0}
+.who{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;white-space:nowrap}
+.ini{width:36px;height:36px;border-radius:50%;border:2.5px solid var(--green);display:grid;place-items:center;font-weight:900;font-size:15px;flex:none}
+.ini.rest{border-color:var(--line);border-style:dashed}
+.area{font-weight:700;color:var(--green);white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{border:1.5px solid var(--green);border-radius:6px;padding:2px 9px;font-size:14.5px;font-weight:600;white-space:nowrap}
+.muted{color:var(--muted)}
+
+/* dynamics lanes */
+.lanes{margin-top:24px;border-top:2px solid var(--ink)}
+.lane{display:grid;grid-template-columns:190px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid var(--line)}
+.lane > h3{font-size:20px;color:var(--blue);padding-top:2px}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.item{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.item strong{display:block;font-size:17.5px;margin-bottom:2px}
+.item p{font-size:15.5px;margin:0 0 8px;color:var(--muted)}
+.item .owner{font-size:14.5px;font-weight:700}
+.redirect{margin-top:36px;border:2px solid var(--ink);border-radius:var(--r);padding:24px;background:var(--card)}
+.redirect h3{font-size:26px}
+.redirect > p{color:var(--muted);font-size:17px}
+.flowsteps{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:1fr auto 1fr auto 1.3fr;align-items:center;gap:12px}
+.step{border:1.5px solid var(--line);border-radius:var(--r);padding:14px 16px;font-weight:700;font-size:16.5px;background:var(--paper);height:100%;display:flex;align-items:center}
+.arrow{color:var(--muted);display:flex;justify-content:center}
+.outcomes{display:grid;gap:8px}
+.outcomes .step{font-weight:600;display:block}
+.outcomes .yes{border-color:var(--green)}
+.outcomes b{display:block;font-size:14.5px}
+.outcomes .yes b{color:var(--green)}
+
+/* phases */
+.phasewrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;align-items:center;margin-top:20px}
+.ring{display:block;width:100%;height:auto}
+.ring text{font-family:"Archivo",system-ui,sans-serif;fill:var(--ink)}
+.phases{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.phases li{display:grid;grid-template-columns:48px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.phases .n{font-variation-settings:"wdth" 62;font-weight:900;font-size:38px;color:var(--blue);line-height:1}
+.phases h3{font-size:21px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.phases h3 span{font-size:14.5px;color:var(--muted);font-weight:600;font-variation-settings:"wdth" 100}
+.phases p{font-size:16px;margin:0;color:var(--muted)}
+
+/* kpis */
+.kpis{width:100%;margin-top:20px;border-top:2px solid var(--ink)}
+.kpis th,.kpis td{text-align:left;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);font-size:16.5px;vertical-align:top}
+.kpis th{font-size:14.5px;color:var(--muted)}
+.kpis td:first-child{font-weight:750}
+
+/* options matrix */
+.matrix{min-width:700px;table-layout:fixed}
+.matrix th,.matrix td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:16px;text-align:left;vertical-align:middle}
+.matrix thead th{vertical-align:bottom;border-bottom:2px solid var(--ink);padding-top:16px}
+.matrix thead th:first-child{width:36%}
+.matrix .pick{background:var(--bluebg)}
+.matrix thead .pick{border-radius:var(--r) var(--r) 0 0}
+.opt-tag{display:block;font-size:14px;color:var(--blue);font-weight:700;min-height:20px;margin-bottom:4px}
+.opt-name{display:block;font-variation-settings:"wdth" 70;font-weight:850;font-size:20px;line-height:1.15}
+.opt-price{display:block;white-space:nowrap;font-variation-settings:"wdth" 62;font-weight:900;font-size:40px;line-height:1.05;margin-top:8px}
+.opt-time{display:block;font-size:14.5px;color:var(--muted);font-weight:600}
+.matrix .grp th{font-size:14.5px;color:var(--blue);font-weight:800;padding-top:20px;border-bottom:1px solid var(--line)}
+.matrix td.c{text-align:center}
+.matrix .ic{width:22px;height:22px}
+.yes{color:var(--green)}
+.no{display:inline-block;width:14px;border-top:2px solid var(--line);vertical-align:middle}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.matrix .guar td{font-size:15px}
+.fine{font-size:15px;color:var(--muted);margin-top:14px}
+.value{margin-top:22px;font-size:18px;max-width:64ch}
+
+
+/* resources */
+.res{margin-top:24px;border-top:2px solid var(--ink)}
+.r{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.4fr) auto;gap:28px;padding:24px 0;border-bottom:1px solid var(--line);align-items:start}
+.r h3{font-size:23px;margin-bottom:4px}
+.r .fmt{font-size:14.5px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.r > div > p{font-size:16.5px;margin:0}
+.r .when{margin-top:10px;font-size:15px}
+.r .when b{color:var(--blue)}
+.inside h4{font-size:14.5px;color:var(--muted);margin:0 0 8px;font-weight:700}
+.inside dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15.5px}
+.inside dt{font-weight:700;color:var(--blue);white-space:nowrap}
+.inside dd{margin:0}
+.acts{display:flex;flex-direction:column;gap:8px;min-width:170px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:700;font-size:15.5px;text-decoration:none;border:2px solid var(--ink);white-space:nowrap;transition:background-color .15s,transform .1s}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:hover{background:var(--hl)}
+.btn.primary:hover{background:var(--blue);border-color:var(--blue)}
+.btn:active{transform:translateY(1px)}
+.btn .ic{width:17px;height:17px}
+button.btn{cursor:pointer;background:transparent;color:var(--ink);font-family:inherit}
+button.btn.primary{background:var(--ink);color:var(--paper)}
+button.btn[disabled]{opacity:.45;cursor:not-allowed}
+.folder{margin-top:22px}
+.dlmsg{font-size:14px;color:var(--muted);margin:6px 0 0;max-width:24ch;min-height:1px}
+@media (max-width:860px){.r{grid-template-columns:1fr;gap:14px}.acts{flex-direction:row;flex-wrap:wrap;min-width:0}}
+
+
+/* servicio */
+.svc{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:0;margin-top:22px;border:2px solid var(--ink);border-radius:var(--r);background:var(--card)}
+.svc-a{padding:24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.svc-a .big{font-variation-settings:"wdth" 62;font-weight:900;font-size:56px;line-height:1}
+.svc-a p{font-size:16.5px;color:var(--muted);margin:0}
+.svc-b{padding:24px}
+.svc-b dl{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:16px}
+.svc-b dt{font-weight:800;color:var(--blue)}
+.svc-b dd{margin:0}
+.promise{margin:18px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:15.5px}
+@media (max-width:860px){.svc{grid-template-columns:1fr}.svc-a{border-right:0;border-bottom:1px solid var(--line)}}
+
+.note-or{display:inline-block;margin-top:14px;padding:8px 14px;border-radius:999px;background:var(--hl);font-size:15px;font-weight:600;max-width:100%}
+.later{margin-top:18px;padding:18px 20px;border:1.5px dashed var(--muted);border-radius:var(--r)}
+.later p{margin:0;color:var(--muted);font-size:16px}
+/* next */
+.next{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:20px;border-top:2px solid var(--ink)}
+.next div{padding:18px 22px 6px 0}
+.next div + div{border-left:1px solid var(--line);padding-left:22px}
+.next h3 span{display:block;font-size:14.5px;color:var(--muted);font-weight:600;font-variation-settings:"wdth" 100;margin-bottom:4px}
+footer{margin-top:72px;padding-top:16px;border-top:1px solid var(--line);font-size:14.5px;color:var(--muted)}
+
+@media (max-width:860px){
+  .filter{grid-template-columns:1fr 1fr}
+  .reads,.gaprow,.phasewrap,.next{grid-template-columns:1fr}
+  .read:nth-child(odd){border-right:0}
+  .read:nth-child(even){padding-left:0}
+  .lane{grid-template-columns:1fr;gap:10px}
+  .flowsteps{grid-template-columns:1fr}
+  .flowsteps .arrow{transform:rotate(90deg);justify-content:flex-start;padding-left:18px}
+  .next div + div{border-left:0;padding-left:0;border-top:1px solid var(--line)}
+  .ring{max-width:460px;margin:0 auto}
+}
+@media (max-width:520px){
+  main{padding:28px 16px 60px}
+  .toc ul{padding:0 16px}
+  .filter{grid-template-columns:1fr}
+  .count .num{font-size:32px}
+  .switch{display:flex;width:100%}
+  .switch button{flex:1;padding:8px 10px;font-size:15px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<nav class="toc" aria-label="Secciones">
+  <ul>
+    <li><a href="#diagnostico">Diagnóstico</a></li>
+    <li><a href="#tareas">Tareas</a></li>
+    <li><a href="#areas">Áreas</a></li>
+    <li><a href="#dinamicas">Dinámicas</a></li>
+    <li><a href="#fases">Fases</a></li>
+    <li><a href="#recursos">Recursos</a></li>
+    <li><a href="#indicadores">Indicadores</a></li>
+    <li><a href="#servicio">Servicio</a></li>
+    <li><a href="#pasos">Próximos pasos</a></li>
+  </ul>
+</nav>
+
+<main>
+<div class="top"><img class="logo" src="data:image/png;base64,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" alt="IApyme Consultores"><span>Propuesta para <b>Gorobel Kirol Gunea</b><br>Llodio y Amurrio, octubre de 2026</span></div>
+
+<header>
+  <h1>Propuesta de delegación de tareas</h1>
+  <p class="lede">Diagnóstico, reparto de tareas entre el equipo, dinámicas de funcionamiento, fases de implantación y recursos del servicio.</p>
+  <p class="note-or">Propuesta orientativa: las fechas, las horas y el reparto se ajustan contigo a medida que avanzamos.</p>
+
+  <div class="board">
+    <div class="boardhead">
+      <div class="switch" role="group" aria-label="Vista del diagrama">
+        <button type="button" id="bA" aria-pressed="true">Situación actual</button>
+        <button type="button" id="bB" aria-pressed="false">Con el sistema</button>
+      </div>
+      <div class="count" aria-live="polite">
+        <span class="num" id="cnt">8 de 8</span>
+        <span class="txt" id="cap">tareas operativas pasan por Joseba</span>
+      </div>
+    </div>
+    <svg id="flow" viewBox="0 0 720 448" role="img" aria-label="Diagrama del reparto de tareas operativas entre Joseba y el equipo">
+      <defs>
+        <marker id="mR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--red)"/></marker>
+        <marker id="mG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--green)"/></marker>
+      </defs>
+      <g id="sys"></g><g id="lines"></g><g id="nodes"></g>
+    </svg>
+    <div class="legend">
+      <span><i style="border-color:var(--red)"></i>Llega a Joseba</span>
+      <span><i style="border-color:var(--green)"></i>La gestiona su responsable</span>
+      <span><i style="border-color:var(--muted);border-top-style:dashed"></i>Revisión semanal</span>
+    </div>
+  </div>
+</header>
+
+<section id="diagnostico">
+  <h2>Diagnóstico</h2>
+  <p class="intro">Conclusiones a partir de la información que nos enviaste sobre el equipo, el reparto del trabajo y el ordenador central.</p>
+  <div class="reads">
+    <div class="read"><h3>Tarifa por clase</h3><p>El equipo cobra por encima de convenio para poder asumir tareas además de la clase. Esas tareas no están definidas, por lo que acaban volviendo a ti.</p></div>
+    <div class="read"><h3>Equipo con horas estables</h3><p>Patricia es head coach y Luis, Asier e Iria tienen entre 27 y 30 horas semanales. Son las cuatro personas que pueden llevar un área.</p></div>
+    <div class="read"><h3>Plantilla rotativa</h3><p>El equipo trabaja en los dos centros, así que las áreas se reparten por función y no por centro, con el mismo sistema en Llodio y Amurrio.</p></div>
+    <div class="read"><h3>Ordenador central</h3><p>Ahora se usa sobre todo para pedidos. Proponemos usarlo para gestionar las tareas, los mensajes de socios y las incidencias.</p></div>
+  </div>
+  <div class="gaps">
+    <h3>Qué falta y cómo lo cubrimos</h3>
+    <div class="gaprow">
+      <div class="gap"><strong>Un responsable para cada tarea</strong><div class="to"><svg class="ic"><use href="#i-arrow"/></svg><a href="#areas">Reparto de áreas</a></div></div>
+      <div class="gap"><strong>Instrucciones escritas de cómo se hace cada tarea</strong><div class="to"><svg class="ic"><use href="#i-arrow"/></svg><a href="#dinamicas">Manuales de una página</a></div></div>
+      <div class="gap"><strong>Un canal de contacto del centro que no sea tu móvil</strong><div class="to"><svg class="ic"><use href="#i-arrow"/></svg><a href="#dinamicas">WhatsApp del centro</a></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="tareas">
+  <h2>Clasificación de tareas</h2>
+  <p class="intro">Durante una semana apuntas las tareas e interrupciones que te llegan. Después las clasificamos contigo en estas cuatro categorías. Los ejemplos son orientativos.</p>
+  <div class="filter">
+    <div class="col" style="--c:var(--muted)"><h3>Eliminar</h3><div class="q">¿Pasaría algo si nadie lo hiciera?</div>
+      <ul><li>Responder la misma duda una y otra vez</li><li>Revisar lo que ya revisa otra persona</li><li>Avisos repetidos por varios canales</li></ul></div>
+    <div class="col" style="--c:var(--blue)"><h3>Automatizar</h3><div class="q">¿Siempre se hace igual?</div>
+      <ul><li>Horarios, precios y cómo apuntarse</li><li>Bienvenida a socios nuevos</li><li>Recordatorios a socios</li></ul></div>
+    <div class="col" style="--c:var(--green)"><h3>Delegar</h3><div class="q">¿Alguien del equipo lo haría bien con un manual?</div>
+      <ul><li>Bajas y cambios de cuadrante</li><li>Material roto e incidencias</li><li>Pedidos y proveedores</li><li>Primer mes de los socios nuevos</li><li>Grupos de WhatsApp y avisos</li></ul></div>
+    <div class="col" style="--c:var(--red)"><h3>Mantener</h3><div class="q">¿Solo puedes hacerlo tú?</div>
+      <ul><li>Estrategia y crecimiento</li><li>Números y precios</li><li>Equipo y contrataciones</li><li>Alianzas y nuevos proyectos</li></ul></div>
+  </div>
+</section>
+
+<section id="areas">
+  <h2>Reparto de áreas</h2>
+  <p class="intro">Las tareas delegadas se agrupan en cuatro áreas, cada una con un responsable. Es una propuesta inicial: el reparto definitivo lo cerramos contigo.</p>
+  <div class="tablewrap">
+  <table class="roles">
+    <thead><tr><th>Responsable</th><th>Área</th><th>Tareas</th><th>Qué usa del sistema</th></tr></thead>
+    <tbody>
+      <tr><td><div class="who"><span class="ini">P</span>Patricia</div></td><td class="area">Equipo y clases</td><td><div class="chips"><span>Cubrir bajas</span><span>Cuadrante</span></div></td><td>Tablero de tareas, revisión semanal</td></tr>
+      <tr><td><div class="who"><span class="ini">L</span>Luis</div></td><td class="area">Material</td><td><div class="chips"><span>Material roto</span><span>Pedidos</span></div></td><td>QR de incidencias, tablero de tareas</td></tr>
+      <tr><td><div class="who"><span class="ini">A</span>Asier</div></td><td class="area">Socios nuevos</td><td><div class="chips"><span>Altas nuevas</span><span>Primer mes</span></div></td><td>WhatsApp del centro, manual de bienvenida</td></tr>
+      <tr><td><div class="who"><span class="ini">I</span>Iria</div></td><td class="area">Comunidad</td><td><div class="chips"><span>WhatsApp de socios</span><span>Avisos y grupos</span></div></td><td>WhatsApp del centro con respuestas rápidas</td></tr>
+      <tr><td><div class="who"><span class="ini rest">+6</span>Resto del equipo</div></td><td class="area muted">Turno</td><td class="muted">Checklist de apertura y cierre, registrar incidencias</td><td class="muted">Haizea, Bilall, Bader, Miguel, Dennyse y Agus</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="dinamicas">
+  <h2>Dinámicas del sistema</h2>
+  <p class="intro">Seis rutinas sencillas, ordenadas por cuándo ocurren. Todas se gestionan desde el ordenador central.</p>
+  <div class="lanes">
+    <div class="lane"><h3>Cada turno</h3><div class="items">
+      <div class="item"><strong>Checklist de apertura y cierre</strong><p>La misma lista en los dos centros.</p><div class="owner">Quien abre o cierra</div></div>
+    </div></div>
+    <div class="lane"><h3>Cuando ocurre algo</h3><div class="items">
+      <div class="item"><strong>QR de incidencias</strong><p>Un código en cada centro para registrar lo que se rompe o falta.</p><div class="owner">Lo recibe Luis</div></div>
+      <div class="item"><strong>WhatsApp del centro</strong><p>Número del centro abierto en el ordenador, con respuestas rápidas y etiquetas.</p><div class="owner">Lo gestiona Iria</div></div>
+      <div class="item"><strong>Manual de una página</strong><p>Uno por cada tarea delegada, con los pasos para hacerla.</p><div class="owner">Lo consulta cualquiera</div></div>
+    </div></div>
+    <div class="lane"><h3>Siempre a la vista</h3><div class="items">
+      <div class="item"><strong>Tablero de tareas</strong><p>Tareas pendientes, en curso y hechas, con el responsable de cada una.</p><div class="owner">Todo el equipo</div></div>
+    </div></div>
+    <div class="lane"><h3>Cada lunes</h3><div class="items">
+      <div class="item"><strong>Revisión semanal de 15 minutos</strong><p>Repaso del tablero y de lo pendiente de la semana.</p><div class="owner">Joseba y Patricia</div></div>
+    </div></div>
+  </div>
+
+  <div class="redirect">
+    <h3>Regla de redirección</h3>
+    <p>Lo que llegue de un área que ya tiene responsable no lo resuelves tú, se lo pasas a esa persona. Si se sigue resolviendo a través de ti, el equipo seguirá escribiéndote y el reparto no se consolida.</p>
+    <ol class="flowsteps">
+      <li class="step">Te llega un mensaje o una tarea</li>
+      <li class="arrow" aria-hidden="true"><svg class="ic" style="width:24px;height:24px"><use href="#i-arrow"/></svg></li>
+      <li class="step">¿Es de un área con responsable?</li>
+      <li class="arrow" aria-hidden="true"><svg class="ic" style="width:24px;height:24px"><use href="#i-arrow"/></svg></li>
+      <li class="outcomes">
+        <div class="step yes"><b>Sí</b>Se la pasas a su responsable</div>
+        <div class="step"><b>No</b>La resuelves y decidimos a qué área va</div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="fases">
+  <h2>Fases de implantación</h2>
+  <p class="intro">Tres fases en cuatro semanas y, después, una revisión semanal que hacéis vosotros. Lo que sale de la revisión sirve para ajustar el reparto.</p>
+  <div class="phasewrap">
+    <svg class="ring" viewBox="0 0 520 420" role="img" aria-label="Ciclo: diagnóstico, montaje, formación y revisión semanal, que vuelve al diagnóstico con ajustes">
+      <defs><marker id="mB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--blue)"/></marker></defs>
+      <circle cx="260" cy="220" r="140" fill="none" stroke="var(--hl)" stroke-width="22"/>
+      <g fill="none" stroke="var(--blue)" stroke-width="3.5" stroke-linecap="round" marker-end="url(#mB)">
+        <path d="M350,112.8 A140,140 0 0 1 395.2,183.8"/>
+        <path d="M395.2,256.2 A140,140 0 0 1 350,327.2"/>
+        <path d="M170,327.2 A140,140 0 0 1 124.8,256.2"/>
+        <path d="M124.8,183.8 A140,140 0 0 1 170,112.8"/>
+      </g>
+      <g fill="var(--card)" stroke="var(--ink)" stroke-width="2.5">
+        <rect x="180" y="58" width="160" height="44" rx="8"/>
+        <rect x="320" y="198" width="160" height="44" rx="8"/>
+        <rect x="180" y="338" width="160" height="44" rx="8"/>
+        <rect x="40" y="198" width="160" height="44" rx="8"/>
+      </g>
+      <g font-size="16" font-weight="800">
+        <text x="196" y="86"><tspan style="fill:var(--blue)">1</tspan>  Diagnóstico</text>
+        <text x="336" y="226"><tspan style="fill:var(--blue)">2</tspan>  Montaje</text>
+        <text x="196" y="366"><tspan style="fill:var(--blue)">3</tspan>  Formación</text>
+        <text x="56" y="226"><tspan style="fill:var(--blue)">4</tspan>  Revisión</text>
+      </g>
+      <text x="118" y="128" text-anchor="end" font-size="14" style="fill:var(--muted)">ajustes</text>
+      <text x="260" y="214" text-anchor="middle" font-size="20" font-weight="900" style="font-variation-settings:'wdth' 66">Ciclo de</text>
+      <text x="260" y="238" text-anchor="middle" font-size="20" font-weight="900" style="font-variation-settings:'wdth' 66">delegación</text>
+    </svg>
+    <ol class="phases">
+      <li><div class="n">1</div><div><h3>Diagnóstico <span>Semanas 1 y 2</span></h3><p>Registro de tareas durante una semana, sesión de clasificación de 2 horas contigo, reparto de áreas y manuales de una página.</p></div></li>
+      <li><div class="n">2</div><div><h3>Montaje <span>Semana 3</span></h3><p>Ordenador central preparado en los dos centros: tablero, WhatsApp del centro, QR y checklists.</p></div></li>
+      <li><div class="n">3</div><div><h3>Formación <span>Semana 4</span></h3><p>Sesión con todo el equipo y entrega del sistema. Patricia queda como responsable de mantenerlo.</p></div></li>
+      <li><div class="n">4</div><div><h3>Revisión semanal <span>Desde la semana 5</span></h3><p>Tú y Patricia revisáis el tablero cada lunes y ajustáis lo que no funcione. Si más adelante queréis un seguimiento con nosotros, lo planteamos entonces.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="recursos">
+  <h2>Recursos del servicio</h2>
+  <p class="intro">Los documentos con los que trabajamos durante el servicio. Las plantillas van prerrellenadas con esta propuesta y se cierran contigo y con el equipo en cada fase.</p>
+  <div class="res">
+    <div class="r">
+      <div><h3>Cronograma del servicio</h3><div class="fmt">Página web</div>
+        <p>Las cuatro semanas del servicio: quién hace cada cosa, cómo se hace y cuánto tiempo lleva.</p>
+        <p class="when"><b>Para qué sirve:</b> que todo el equipo sepa qué le toca y cuándo.</p></div>
+      <div class="inside"><h4>Qué contiene</h4><dl>
+        <dt>Tiempos</dt><dd>Las horas de IApyme y el tiempo que pone cada persona de Gorobel</dd>
+        <dt>Semana a semana</dt><dd>Cronograma deslizable con una fila por persona y cómo se hace cada actividad</dd>
+        <dt>Detalle</dt><dd>Todas las actividades por fase, con quién participa y la plantilla que se usa</dd></dl></div>
+      <div class="acts"><a class="btn primary" href="https://claude.ai/artifact/8r6EmDJ7oVseCKEEEX5XTX" target="_blank" rel="noopener"><svg class="ic"><use href="#i-open"/></svg>Abrir</a></div>
+    </div>
+    <div class="r">
+      <div><h3>Kit de plantillas</h3><div class="fmt">Documento de 16 páginas, en Word y PDF</div>
+        <p>Las plantillas, guiones de sesión y ejercicios de cada dinámica. Se imprime lo que se usa en el centro y se edita el resto.</p>
+        <p class="when"><b>Para qué sirve:</b> que cada dinámica tenga su documento base desde el primer día.</p></div>
+      <div class="inside"><h4>Qué contiene</h4><dl>
+        <dt>Diagnóstico</dt><dd>Instrucciones del registro, guion de la sesión de clasificación con el ejercicio de las cuatro preguntas, fichas de rol de cada responsable y manual de una página</dd>
+        <dt>Montaje</dt><dd>Checklist de apertura y cierre, respuestas rápidas de WhatsApp, formulario y cartel de incidencias, reglas del tablero</dd>
+        <dt>Formación</dt><dd>Guion de la sesión con el equipo, ejercicio "¿quién lo lleva?", cartel y frases de la regla de redirección, traspaso a Patricia</dd>
+        <dt>Revisión semanal</dt><dd>Orden del día y acta para la revisión de los lunes</dd></dl></div>
+      <div class="acts"><a class="btn primary" href="https://drive.google.com/file/d/1NbC4-J2suDAboOLG6dZctsxuwX_pVIRH/view?usp=share_link" target="_blank" rel="noopener"><svg class="ic"><use href="#i-open"/></svg>Ver PDF</a><a class="btn" href="https://drive.google.com/uc?export=download&amp;id=1ti1gR9teg6Pq0th2Zaol9D8IY8oMDEw1" target="_blank" rel="noopener"><svg class="ic"><use href="#i-down"/></svg>Word</a></div>
+    </div>
+    <div class="r">
+      <div><h3>Hojas de trabajo</h3><div class="fmt">Excel para el ordenador central</div>
+        <p>Las hojas que se usan en el día a día. Las celdas amarillas se rellenan y los totales se calculan solos.</p>
+        <p class="when"><b>Para qué sirve:</b> registrar, repartir y medir sin depender de la memoria de nadie.</p></div>
+      <div class="inside"><h4>Qué contiene</h4><dl>
+        <dt>Registro</dt><dd>La semana de registro de tareas de Joseba, con resumen automático por categoría, área, canal y centro</dd>
+        <dt>Tablero</dt><dd>Tareas delegadas con responsable y estado; marca en rojo lo vencido</dd>
+        <dt>Incidencias</dt><dd>Lo que se rompe o falta en Llodio y Amurrio</dd>
+        <dt>Indicadores</dt><dd>Los cuatro indicadores, para apuntarlos semana a semana</dd></dl></div>
+      <div class="acts"><a class="btn primary" href="https://drive.google.com/file/d/1wLKeDqcLxMcxjAUVBqGY2md9aGQmzsxd/view?usp=share_link" target="_blank" rel="noopener"><svg class="ic"><use href="#i-open"/></svg>Ver Excel</a><a class="btn" href="https://drive.google.com/uc?export=download&amp;id=1wLKeDqcLxMcxjAUVBqGY2md9aGQmzsxd" target="_blank" rel="noopener"><svg class="ic"><use href="#i-down"/></svg>Excel</a></div>
+    </div>
+  </div>
+  <p class="folder"><a class="btn" href="https://drive.google.com/drive/folders/1RZWkNveUIj1GdFkECPZaDIf6bVY_-O9y?usp=share_link" target="_blank" rel="noopener"><svg class="ic"><use href="#i-open"/></svg>Abrir la carpeta con todos los archivos</a></p>
+</section>
+
+<section id="indicadores">
+  <h2>Indicadores</h2>
+  <p class="intro">La primera medición sale del registro de la semana 1. A partir de ahí, se pueden apuntar en la revisión de los lunes.</p>
+  <div class="tablewrap">
+  <table class="kpis">
+    <thead><tr><th>Indicador</th><th>Cómo se mide</th></tr></thead>
+    <tbody>
+      <tr><td>Mensajes que te llegan</td><td>Número por semana</td></tr>
+      <tr><td>Tareas resueltas sin ti</td><td>Tareas cerradas en el tablero por el equipo</td></tr>
+      <tr><td>Tiempo de respuesta a socios</td><td>Desde que escriben al WhatsApp del centro hasta que se les responde</td></tr>
+      <tr><td>Tiempo recuperado</td><td>Horas semanales libres en tu agenda</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="servicio">
+  <h2>El servicio</h2>
+  <p class="intro">Un único servicio de unas cuatro semanas, del registro de tareas a la entrega del sistema funcionando.</p>
+  <div class="svc">
+    <div class="svc-a">
+      <div class="big">4 semanas</div>
+      <p>Tres visitas a los centros y el resto en remoto. Duración orientativa: la ajustamos contigo.</p>
+      <a class="btn primary" href="https://claude.ai/artifact/8r6EmDJ7oVseCKEEEX5XTX" target="_blank" rel="noopener"><svg class="ic"><use href="#i-open"/></svg>Ver el cronograma</a>
+    </div>
+    <div class="svc-b">
+      <h3>Qué incluye</h3>
+      <dl>
+        <dt>Diagnóstico</dt><dd>Registro de tareas, sesión de clasificación, reparto de áreas y manuales de una página</dd>
+        <dt>Montaje</dt><dd>Ordenador central y tablero, WhatsApp del centro, QR de incidencias y checklists en los dos centros</dd>
+        <dt>Formación</dt><dd>Sesión con todo el equipo y formación de Patricia como responsable del sistema</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="later"><p><b>Más adelante, si lo necesitáis:</b> cuando el sistema lleve unas semanas funcionando, podemos hacer un seguimiento para medir los indicadores, ajustar áreas y manuales y preparar un informe con el antes y el después. No forma parte de este servicio.</p></div>
+</section>
+
+<section id="pasos">
+  <h2>Próximos pasos</h2>
+  <div class="next">
+    <div><h3><span>Semana 1</span>Registro de tareas</h3><p>Te enviamos la plantilla de registro y empiezas a apuntar lo que te llega durante una semana.</p></div>
+    <div><h3><span>Semana 2</span>Sesión de clasificación</h3><p>Revisamos contigo la lista del registro y cerramos el reparto de áreas.</p></div>
+  </div>
+</section>
+
+<footer>Propuesta de IApyme Consultores para Gorobel Kirol Gunea.</footer>
+</main>
+
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg";
+  var J_A={x:360,y:222,r:60}, J_B={x:360,y:64,r:38};
+  var owners=[
+    {k:"P",name:"Patricia",area:"Equipo y clases",x:110},
+    {k:"L",name:"Luis",area:"Material",x:270},
+    {k:"A",name:"Asier",area:"Socios nuevos",x:450},
+    {k:"I",name:"Iria",area:"Comunidad",x:610}
+  ];
+  var OY=262, OR=30;
+  var tasks=[
+    {t:"Cubrir bajas",o:0,a:[360,62],b:[110,326]},
+    {t:"Cuadrante",o:0,a:[542,106],b:[110,360]},
+    {t:"Material roto",o:1,a:[624,222],b:[270,326]},
+    {t:"Pedidos",o:1,a:[542,338],b:[270,360]},
+    {t:"Altas nuevas",o:2,a:[360,382],b:[450,326]},
+    {t:"Primer mes",o:2,a:[178,338],b:[450,360]},
+    {t:"WhatsApp de socios",o:3,a:[96,222],b:[610,326]},
+    {t:"Avisos y grupos",o:3,a:[178,106],b:[610,360]}
+  ];
+  var svg=document.getElementById("flow"), gS=svg.querySelector("#sys"), gL=svg.querySelector("#lines"), gN=svg.querySelector("#nodes");
+  function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+  function txt(p,x,y,s,a){var t=el("text",Object.assign({x:x,y:y},a||{}),p);t.textContent=s;return t}
+
+  var sys=el("g",{},gS);
+  el("rect",{x:30,y:398,width:660,height:42,rx:8,fill:"var(--hl)",stroke:"var(--ink)","stroke-width":2},sys);
+  txt(sys,360,425,"Ordenador central: tablero, WhatsApp del centro, incidencias y manuales",{"text-anchor":"middle","font-size":15,"font-weight":700});
+  el("path",{d:"M398,64 H700 V398",fill:"none",stroke:"var(--muted)","stroke-width":1.8,"stroke-dasharray":"5 5"},sys);
+  owners.forEach(function(o){
+    el("line",{x1:o.x,y1:OY+OR,x2:o.x,y2:398,stroke:"var(--green)","stroke-width":1.6,"stroke-dasharray":"3 5"},sys);
+    el("circle",{cx:o.x,cy:OY,r:OR,fill:"var(--card)",stroke:"var(--green)","stroke-width":3},sys);
+    txt(sys,o.x,OY+7,o.k,{"text-anchor":"middle","font-size":19,"font-weight":900});
+    txt(sys,o.x,OY-50,o.name,{"text-anchor":"middle","font-size":17,"font-weight":800});
+    txt(sys,o.x,OY-34,o.area,{"text-anchor":"middle","font-size":13.5,style:"fill:var(--green)","font-weight":700});
+  });
+  var jSub=txt(gS,360,124,"estrategia y crecimiento",{"text-anchor":"middle","font-size":14,style:"fill:var(--muted)"});
+
+  var lines=tasks.map(function(){return el("line",{"stroke-width":2.2,"stroke-linecap":"round"},gL)});
+  var jC=el("circle",{fill:"var(--hl)",stroke:"var(--ink)","stroke-width":3},gN);
+  var jT=txt(gN,0,0,"Joseba",{"text-anchor":"middle","font-weight":900});
+  var chips=tasks.map(function(t){
+    var g=el("g",{class:"chip"},gN), w=t.t.length*7.6+24;
+    t.r=el("rect",{x:-w/2,y:-14,width:w,height:28,rx:6},g);
+    txt(g,0,5,t.t,{"text-anchor":"middle"});
+    return g;
+  });
+
+  function lerp(a,b,e){return a+(b-a)*e}
+  function draw(e){
+    var jx=lerp(J_A.x,J_B.x,e), jy=lerp(J_A.y,J_B.y,e), jr=lerp(J_A.r,J_B.r,e);
+    jC.setAttribute("cx",jx);jC.setAttribute("cy",jy);jC.setAttribute("r",jr);
+    jT.setAttribute("x",jx);jT.setAttribute("y",jy+lerp(8,6,e));jT.setAttribute("font-size",lerp(22,17,e));
+    sys.setAttribute("opacity",e); jSub.setAttribute("opacity",e);
+    var green=e>0.5, col=green?"var(--green)":"var(--red)";
+    tasks.forEach(function(t,i){
+      var x=lerp(t.a[0],t.b[0],e), y=lerp(t.a[1],t.b[1],e);
+      chips[i].setAttribute("transform","translate("+x+","+y+")");
+      t.r.setAttribute("stroke",col);
+      var tx=lerp(J_A.x,owners[t.o].x,e), ty=lerp(J_A.y,OY,e), tr=lerp(J_A.r,OR,e)+3;
+      var dx=tx-x, dy=ty-y, d=Math.hypot(dx,dy)||1, L=lines[i];
+      L.setAttribute("x1",x);L.setAttribute("y1",y);
+      L.setAttribute("x2",tx-dx/d*tr);L.setAttribute("y2",ty-dy/d*tr);
+      L.setAttribute("stroke",col);
+      L.setAttribute("marker-end",green?"url(#mG)":"url(#mR)");
+      L.setAttribute("opacity",green&&i%2===1?0:1);
+    });
+  }
+  var cur=0, raf=null, reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var bA=document.getElementById("bA"), bB=document.getElementById("bB"), cnt=document.getElementById("cnt"), cap=document.getElementById("cap");
+  function go(target){
+    bA.setAttribute("aria-pressed",target===0);bB.setAttribute("aria-pressed",target===1);
+    cnt.textContent=target?"0 de 8":"8 de 8";
+    cap.textContent="tareas operativas pasan por Joseba";
+    if(raf)cancelAnimationFrame(raf);
+    if(reduce){cur=target;draw(cur);return}
+    var from=cur,start=null,dur=1000;
+    function step(ts){
+      if(!start)start=ts;
+      var p=Math.min(1,(ts-start)/dur), ease=p===1?1:1-Math.pow(2,-10*p);
+      cur=from+(target-from)*ease; draw(cur);
+      if(p<1)raf=requestAnimationFrame(step);
+    }
+    raf=requestAnimationFrame(step);
+  }
+  bA.addEventListener("click",function(){go(0)});
+  bB.addEventListener("click",function(){go(1)});
+  draw(0);
+
+  // nav: marca la sección visible
+  var links=[].slice.call(document.querySelectorAll(".toc a"));
+  if("IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          links.forEach(function(a){
+            var on=a.getAttribute("href")==="#"+en.target.id;
+            a.setAttribute("aria-current",on?"true":"false");
+            if(on&&a.scrollIntoView&&window.innerWidth<860){a.parentNode.parentNode.scrollLeft=a.offsetLeft-16}
+          });
+        }
+      });
+    },{rootMargin:"-40% 0px -55% 0px"});
+    document.querySelectorAll("main section[id]").forEach(function(s){io.observe(s)});
+  }
+})();
+</script>
+</body>
+</html>
